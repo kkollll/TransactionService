@@ -3,46 +3,44 @@ package com.imooc.example;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 
-public class LocalJDBCTransApplication {
+public class LocalJDBCTransApplication2 {
 
-    private static final Logger log = LoggerFactory.getLogger("LocalJDBCTransApplication");
+    private static final Logger log = LoggerFactory.getLogger("LocalJDBCTransApplication2");
 
     public static void main(String[] args) throws SQLException {
 
         Connection connection = getConnection();
         connection.setAutoCommit(false);
 
+        String query = "select * from t_user where id = 1 for update";
+        PreparedStatement ps = connection.prepareStatement(query);
+        ResultSet rs = ps.executeQuery();
+        int superManAmount = 0;
+        while (rs.next()) {
+            String username = rs.getString(2);
+            int amount = rs.getInt(3);
+            log.info("{} has amount: {}", username, amount);
+            if (username.equals("SuperMan")) {
+                superManAmount = amount;
+            }
+        }
+
         String plusSQL = "update t_user\n" +
-                "set amount = amount + 100\n" +
+                "set amount = ? + 100\n" +
                 "where username = ?";
         PreparedStatement plusPS = connection.prepareStatement(plusSQL);
 
-        String minusSQL = "update t_user\n" +
-                "set amount = amount - 100\n" +
-                "where username = ?";
-        PreparedStatement minusPS = connection.prepareStatement(minusSQL);
-
-        plusPS.setString(1,"SuperMan");
+        plusPS.setInt(1, superManAmount);
+        plusPS.setString(2,"SuperMan");
         plusPS.executeUpdate();
 
-
-        minusPS.setString(1,"BatMan");
-        minusPS.executeUpdate();
 
         connection.commit();
 
         plusPS.close();
-        minusPS.close();
         connection.close();
-    }
-
-    private static void simulateERROR() throws SQLException {
-        throw new SQLException("Some error");
     }
 
     private static Connection getConnection() throws SQLException {
