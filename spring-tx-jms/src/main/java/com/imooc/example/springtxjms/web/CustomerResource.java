@@ -25,6 +25,16 @@ public class CustomerResource {
         customerService.handle(msg);
     }
 
+    @RequestMapping(value = "/message2/listen", method = RequestMethod.POST)
+    public void create2(@RequestParam String msg) {
+        jmsTemplate.convertAndSend("customer:msg2:new", msg);
+    }
+
+    @PostMapping("/message2/direct")
+    public void handle2(@RequestParam String msg) {
+        customerService.handleInCode(msg);
+    }
+
     @RequestMapping("/message")
     public String read() {
         jmsTemplate.setReceiveTimeout(2000);
